@@ -52,20 +52,12 @@ const colors = [
 	'#17becf',
 ];
 
-class Field {
-	/**
-	 * @param {number} x
-	 * @param {number} y
-	 */
+class Vector {
 	constructor(x, y) {
 		this.x = x;
 		this.y = y;
 	}
 
-	/**
-	 * @param {number} angle
-	 * @returns {Field}
-	 */
 	rotate(angle) {
 		const xNew =
 			this.x * Math.cos(angle) - this.y * Math.sin(angle);
@@ -74,37 +66,22 @@ class Field {
 		return this;
 	}
 
-	/**
-	 * @param {number} factor
-	 * @returns {Field}
-	 */
 	multiply(factor) {
 		this.x *= factor;
 		this.y *= factor;
 		return this;
 	}
 
-	/**
-	 * @param {number} x
-	 * @param {number} y
-	 * @returns {Field}
-	 */
 	add(x, y) {
 		this.x += x;
 		this.y += y;
 		return this;
 	}
 
-	/**
-	 * @returns {Field}
-	 */
 	duplicate() {
-		return new Field(this.x, this.y);
+		return new Vector(this.x, this.y);
 	}
 
-	/**
-	 * @returns {number}
-	 */
 	length() {
 		return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
 	}
@@ -114,7 +91,7 @@ class Field {
  * Creates a board representation with coordinates of fiels
  * @param {number} nrPlayers
  * @param {number} nrPiecesPerPlayer
- * @returns {Array.<Array.<Field>>} Coordinates approximately around unit circle
+ * @returns {Array.<Array.<Vector>>} Tuple of (field, house) positions
  */
 function createBoard(nrPlayers, nrPiecesPerPlayer) {
 	console.assert(
@@ -127,135 +104,147 @@ function createBoard(nrPlayers, nrPiecesPerPlayer) {
 		'Expected: 1 <= nrPiecesPerPlayer <= 6, Is: nrPlayers == %d',
 		nrPiecesPerPlayer
 	);
-	const firstOuterAnchorField = new Field(0.0, 1.0);
-	const firstInnerAnchorField = firstOuterAnchorField
+	const firstOuterAnchor = new Vector(0.0, 1.0);
+	const firstInnerAnchor = firstOuterAnchor
 		.duplicate()
 		.rotate(Math.PI / nrPlayers)
 		.multiply((Math.sqrt(2.0) * 0.8) / nrPiecesPerPlayer);
-	const outerAnchorFields = createAnchorFields(
+	const outerAnchors = createAnchors(
 		nrPlayers,
-		firstOuterAnchorField
+		firstOuterAnchor
 	);
-	const innerAnchorFields = createAnchorFields(
+	const innerAnchors = createAnchors(
 		nrPlayers,
-		firstInnerAnchorField
+		firstInnerAnchor
 	);
-	console.assert(outerAnchorFields.length == innerAnchorFields.length);
-	const houseFields = createHouseFields(
-		outerAnchorFields,
-		innerAnchorFields,
+	console.assert(outerAnchors.length == innerAnchors.length);
+	const houses = createHouses(
+		outerAnchors,
+		innerAnchors,
 		nrPiecesPerPlayer
 	);
-	const connectionFields = createConnectionFields(
-		outerAnchorFields,
-		innerAnchorFields,
+	const connections = createConnections(
+		outerAnchors,
+		innerAnchors,
 		nrPiecesPerPlayer
 	);
-	const sortedFields = [];
+	const board = mergeToSortedBoard(outerAnchors, innerAnchors, connections, nrPlayers, nrPiecesPerPlayer);
+	console.assert(
+		board.length == (2 * nrPiecesPerPlayer + 2) * nrPlayers
+	);
+	return [board, houses];
+}
+
+function mergeToSortedBoard(outerAnchors, innerAnchors, connections, nrPlayers, nrPiecesPerPlayer) {
+	const sortedVectors = [];
 	for (let i = 0; i < nrPlayers; i++) {
 		for (let j = 0; j < nrPiecesPerPlayer; j++) {
-			sortedFields.push(connectionFields.pop());
+			sortedVectors.push(connections.pop());
 		}
-		sortedFields.push(innerAnchorFields.pop());
+		sortedVectors.push(innerAnchors.pop());
 		for (let j = 0; j < nrPiecesPerPlayer; j++) {
-			sortedFields.push(connectionFields.pop());
+			sortedVectors.push(connections.pop());
 		}
-		sortedFields.push(outerAnchorFields.pop());
+		sortedVectors.push(outerAnchors.pop());
 	}
-	console.assert(
-		sortedFields.length == (2 * nrPiecesPerPlayer + 2) * nrPlayers
-	);
-	return [sortedFields, houseFields];
+	return sortedVectors;
 }
 
 /**
  * @param {number} nrPlayers
- * @returns {Array.<Field>}
+ * @param {Vector} firstAnchor 
+ * @returns {Array.<Vector>}
  */
-function createAnchorFields(nrPlayers, firstField) {
-	const fields = Array(nrPlayers);
-	fields[0] = firstField;
+function createAnchors(nrPlayers, firstAnchor) {
+	const anchors = Array(nrPlayers);
+	anchors[0] = firstAnchor;
 	const angle = (2 * Math.PI) / nrPlayers;
 	for (let i = 1; i < nrPlayers; i++) {
-		fields[i] = firstField.duplicate().rotate(i * angle);
+		anchors[i] = firstAnchor.duplicate().rotate(i * angle);
 	}
-	return fields;
+	return anchors;
 }
 
 /**
- * @param {Array.<Field>} outerAnchorFields
- * @param {Array.<Field>} innerAnchorFields
+ * @param {Array.<Vector>} outerAnchors
+ * @param {Array.<Vector>} innerAnchors
  * @param {number} nrPiecesPerPlayer
- * @returns {Array.<Field>}
+ * @returns {Array.<Vector>}
  */
-function createHouseFields(
-	outerAnchorFields,
-	innerAnchorFields,
+function createHouses(
+	outerAnchors,
+	innerAnchors,
 	nrPiecesPerPlayer
 ) {
-	const houseFields = Array(outerAnchorFields.length * nrPiecesPerPlayer);
-	for (let i = 0; i < outerAnchorFields.length; i++) {
-		const outerField = outerAnchorFields[i];
-		const innerFieldLeft = innerAnchorFields[i];
-		const innerFieldRight =
+	const houses = Array(
+		outerAnchors.length * nrPiecesPerPlayer
+	);
+	for (let i = 0; i < outerAnchors.length; i++) {
+		const outer = outerAnchors[i];
+		const innerLeft = innerAnchors[i];
+		const innerRight =
 			i == 0
-				? innerAnchorFields[
-						innerAnchorFields.length - 1
+				? innerAnchors[
+						innerAnchors.length - 1
 				  ]
-				: innerAnchorFields[i - 1];
-		const leftToRightField = innerFieldRight
+				: innerAnchors[i - 1];
+		const leftToRight = innerRight
 			.duplicate()
-			.add(-innerFieldLeft.x, -innerFieldLeft.y)
+			.add(-innerLeft.x, -innerLeft.y)
 			.multiply(0.5);
-		const innerOuterParallel = innerFieldLeft
+		const innerOuterParallel = innerLeft
 			.duplicate()
-			.add(leftToRightField.x, leftToRightField.y);
-		const helperField = outerField
+			.add(leftToRight.x, leftToRight.y);
+		const helper= outer
 			.duplicate()
 			.add(-innerOuterParallel.x, -innerOuterParallel.y)
 			.multiply((1.0 / nrPiecesPerPlayer) * 0.9);
 		for (let j = 1; j <= nrPiecesPerPlayer; j++) {
-			houseFields[i * nrPiecesPerPlayer + j - 1] = outerField
-				.duplicate()
-				.add(-helperField.x * j, -helperField.y * j);
+			houses[i * nrPiecesPerPlayer + j - 1] =
+				outer
+					.duplicate()
+					.add(
+						-helper.x * j,
+						-helper.y * j
+					);
 		}
 	}
-	return houseFields;
+	return houses;
 }
 
 /**
- * @param {Array.<Field>} outerAnchorFields
- * @param {Array.<Field>} innerAnchorFields
+ * @param {Array.<Vector>} outerAnchors
+ * @param {Array.<Vector>} innerAnchors
  * @param {number} nrPiecesPerPlayer
- * @returns {Array.<Field>}
+ * @returns {Array.<Vector>}
  */
-function createConnectionFields(
-	outerAnchorFields,
-	innerAnchorFields,
+function createConnections(
+	outerAnchors,
+	innerAnchors,
 	nrPiecesPerPlayer
 ) {
 	console.assert(
-		outerAnchorFields.length === innerAnchorFields.length,
-		'Expected: same number of outerAnchorFields and innerAnchorFields'
+		outerAnchors.length === innerAnchors.length,
+		'Expected: same number of outerAnchors and innerAnchors'
 	);
 	const fields = [];
-	for (let i = 0; i < innerAnchorFields.length; i++) {
-		const innerField = innerAnchorFields[i];
-		const outerFieldRight = outerAnchorFields[i];
-		const outerFieldRightTarget = createNeighborField(
-			outerFieldRight,
-			innerField,
+	for (let i = 0; i < innerAnchors.length; i++) {
+		const inner = innerAnchors[i];
+		const outerRight = outerAnchors[i];
+		const outerRightTarget = createNeighbor(
+			outerRight,
+			inner,
 			nrPiecesPerPlayer,
 			Math.PI / 2.0
 		);
-		const innerToRightTarget = outerFieldRightTarget
+		const innerToRightTarget = outerRightTarget
 			.duplicate()
-			.add(-innerField.x, -innerField.y)
+			.add(-inner.x, -inner.y)
 			.multiply(1.0 / nrPiecesPerPlayer);
-		fields.push(outerFieldRightTarget);
+		fields.push(outerRightTarget);
 		for (let i = nrPiecesPerPlayer - 1; i > 0; i--) {
 			fields.push(
-				innerField
+				inner
 					.duplicate()
 					.add(
 						i * innerToRightTarget.x,
@@ -263,23 +252,23 @@ function createConnectionFields(
 					)
 			);
 		}
-		const outerFieldLeft =
-			i == outerAnchorFields.length - 1
-				? outerAnchorFields[0]
-				: outerAnchorFields[i + 1];
-		const outerFieldLeftTarget = createNeighborField(
-			outerFieldLeft,
-			innerField,
+		const outerLeft =
+			i == outerAnchors.length - 1
+				? outerAnchors[0]
+				: outerAnchors[i + 1];
+		const outerLeftTarget = createNeighbor(
+			outerLeft,
+			inner,
 			nrPiecesPerPlayer,
 			-Math.PI / 2
 		);
-		const innerToLeftTarget = outerFieldLeftTarget
+		const innerToLeftTarget = outerLeftTarget
 			.duplicate()
-			.add(-innerField.x, -innerField.y)
+			.add(-inner.x, -inner.y)
 			.multiply(1.0 / nrPiecesPerPlayer);
 		for (let i = 1; i < nrPiecesPerPlayer; i++) {
 			fields.push(
-				innerField
+				inner
 					.duplicate()
 					.add(
 						i * innerToLeftTarget.x,
@@ -287,44 +276,39 @@ function createConnectionFields(
 					)
 			);
 		}
-		fields.push(outerFieldLeftTarget);
+		fields.push(outerLeftTarget);
 	}
 	return fields;
 }
 
 /**
- * @param {Field} outerField
- * @param {Field} innerField
+ * @param {Vector} outer
+ * @param {Vector} inner
  * @param {number} angle
- * @returns {Field}
+ * @returns {Vector}
  */
-function createNeighborField(outerField, innerField, nrPiecesPerPlayer, angle) {
-	const innerToOuterField = outerField
+function createNeighbor(
+	outer,
+	inner,
+	nrPiecesPerPlayer,
+	angle
+) {
+	const innerToOuter = outer
 		.duplicate()
-		.add(-innerField.x, -innerField.y)
+		.add(-inner.x, -inner.y)
 		.multiply(1.0 / nrPiecesPerPlayer);
-	const helperField = outerField
+	const helper= outer
 		.duplicate()
 		.rotate(angle)
-		.multiply(innerToOuterField.length());
-	return outerField.duplicate().add(helperField.x, helperField.y);
+		.multiply(innerToOuter.length());
+	return outer.duplicate().add(helper.x, helper.y);
 }
 
-window.onload = () => {
-	const selectNrPlayersElem = document.getElementById('nrPlayers');
-	selectNrPlayersElem.oninput = () =>
-		updateSvg(
-			selectNrPlayersElem.value,
-			playerToPieces.get(parseInt(selectNrPlayersElem.value))
-		);
-	updateSvg(
-		selectNrPlayersElem.value,
-		playerToPieces.get(parseInt(selectNrPlayersElem.value))
-	);
-};
-
 function updateSvg(nrPlayers, nrPiecesPerPlayer) {
-	const [fields, houseFields] = createBoard(nrPlayers, nrPiecesPerPlayer);
+	const [fields, houses] = createBoard(
+		nrPlayers,
+		nrPiecesPerPlayer
+	);
 	const spanElem = document.getElementById('nrPlayersDisplay');
 	spanElem.textContent = nrPlayers;
 	const svgElem = document.getElementById('board');
@@ -339,7 +323,7 @@ function updateSvg(nrPlayers, nrPiecesPerPlayer) {
 			circleElem.setAttribute('fill', colors[colorindex]);
 			for (let j = 0; j < nrPiecesPerPlayer; j++) {
 				const houseCircle = createCircleElement(
-					houseFields.pop(),
+					houses.pop(),
 					0.7
 				);
 				houseCircle.setAttribute(
@@ -386,3 +370,16 @@ function createCircleElement(field, scale = 1.0) {
 	circleElem.setAttribute('stroke-width', 0.01);
 	return circleElem;
 }
+
+window.onload = () => {
+	const selectNrPlayersElem = document.getElementById('nrPlayers');
+	selectNrPlayersElem.oninput = () =>
+		updateSvg(
+			selectNrPlayersElem.value,
+			playerToPieces.get(parseInt(selectNrPlayersElem.value))
+		);
+	updateSvg(
+		selectNrPlayersElem.value,
+		playerToPieces.get(parseInt(selectNrPlayersElem.value))
+	);
+};
