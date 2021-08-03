@@ -59,8 +59,7 @@ class Vector {
 	}
 
 	rotate(angle) {
-		const xNew =
-			this.x * Math.cos(angle) - this.y * Math.sin(angle);
+		const xNew = this.x * Math.cos(angle) - this.y * Math.sin(angle);
 		this.y = this.x * Math.sin(angle) + this.y * Math.cos(angle);
 		this.x = xNew;
 		return this;
@@ -109,29 +108,13 @@ function createBoard(nrPlayers, nrPiecesPerPlayer) {
 		.duplicate()
 		.rotate(Math.PI / nrPlayers)
 		.multiply((Math.sqrt(2.0) * 0.8) / nrPiecesPerPlayer);
-	const outerAnchors = createAnchors(
-		nrPlayers,
-		firstOuterAnchor
-	);
-	const innerAnchors = createAnchors(
-		nrPlayers,
-		firstInnerAnchor
-	);
+	const outerAnchors = createAnchors(nrPlayers, firstOuterAnchor);
+	const innerAnchors = createAnchors(nrPlayers, firstInnerAnchor);
 	console.assert(outerAnchors.length == innerAnchors.length);
-	const houses = createHouses(
-		outerAnchors,
-		innerAnchors,
-		nrPiecesPerPlayer
-	);
-	const connections = createConnections(
-		outerAnchors,
-		innerAnchors,
-		nrPiecesPerPlayer
-	);
+	const houses = createHouses(outerAnchors, innerAnchors, nrPiecesPerPlayer);
+	const connections = createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer);
 	const board = mergeToSortedBoard(outerAnchors, innerAnchors, connections, nrPlayers, nrPiecesPerPlayer);
-	console.assert(
-		board.length == (2 * nrPiecesPerPlayer + 2) * nrPlayers
-	);
+	console.assert(board.length == (2 * nrPiecesPerPlayer + 2) * nrPlayers);
 	return [board, houses];
 }
 
@@ -152,7 +135,7 @@ function mergeToSortedBoard(outerAnchors, innerAnchors, connections, nrPlayers, 
 
 /**
  * @param {number} nrPlayers
- * @param {Vector} firstAnchor 
+ * @param {Vector} firstAnchor
  * @returns {Array.<Vector>}
  */
 function createAnchors(nrPlayers, firstAnchor) {
@@ -171,42 +154,20 @@ function createAnchors(nrPlayers, firstAnchor) {
  * @param {number} nrPiecesPerPlayer
  * @returns {Array.<Vector>}
  */
-function createHouses(
-	outerAnchors,
-	innerAnchors,
-	nrPiecesPerPlayer
-) {
-	const houses = Array(
-		outerAnchors.length * nrPiecesPerPlayer
-	);
+function createHouses(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
+	const houses = Array(outerAnchors.length * nrPiecesPerPlayer);
 	for (let i = 0; i < outerAnchors.length; i++) {
 		const outer = outerAnchors[i];
 		const innerLeft = innerAnchors[i];
-		const innerRight =
-			i == 0
-				? innerAnchors[
-						innerAnchors.length - 1
-				  ]
-				: innerAnchors[i - 1];
-		const leftToRight = innerRight
-			.duplicate()
-			.add(-innerLeft.x, -innerLeft.y)
-			.multiply(0.5);
-		const innerOuterParallel = innerLeft
-			.duplicate()
-			.add(leftToRight.x, leftToRight.y);
-		const helper= outer
+		const innerRight = i == 0 ? innerAnchors[innerAnchors.length - 1] : innerAnchors[i - 1];
+		const leftToRight = innerRight.duplicate().add(-innerLeft.x, -innerLeft.y).multiply(0.5);
+		const innerOuterParallel = innerLeft.duplicate().add(leftToRight.x, leftToRight.y);
+		const helper = outer
 			.duplicate()
 			.add(-innerOuterParallel.x, -innerOuterParallel.y)
 			.multiply((1.0 / nrPiecesPerPlayer) * 0.9);
 		for (let j = 1; j <= nrPiecesPerPlayer; j++) {
-			houses[i * nrPiecesPerPlayer + j - 1] =
-				outer
-					.duplicate()
-					.add(
-						-helper.x * j,
-						-helper.y * j
-					);
+			houses[i * nrPiecesPerPlayer + j - 1] = outer.duplicate().add(-helper.x * j, -helper.y * j);
 		}
 	}
 	return houses;
@@ -218,11 +179,7 @@ function createHouses(
  * @param {number} nrPiecesPerPlayer
  * @returns {Array.<Vector>}
  */
-function createConnections(
-	outerAnchors,
-	innerAnchors,
-	nrPiecesPerPlayer
-) {
+function createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
 	console.assert(
 		outerAnchors.length === innerAnchors.length,
 		'Expected: same number of outerAnchors and innerAnchors'
@@ -231,50 +188,23 @@ function createConnections(
 	for (let i = 0; i < innerAnchors.length; i++) {
 		const inner = innerAnchors[i];
 		const outerRight = outerAnchors[i];
-		const outerRightTarget = createNeighbor(
-			outerRight,
-			inner,
-			nrPiecesPerPlayer,
-			Math.PI / 2.0
-		);
+		const outerRightTarget = createNeighbor(outerRight, inner, nrPiecesPerPlayer, Math.PI / 2.0);
 		const innerToRightTarget = outerRightTarget
 			.duplicate()
 			.add(-inner.x, -inner.y)
 			.multiply(1.0 / nrPiecesPerPlayer);
 		fields.push(outerRightTarget);
 		for (let i = nrPiecesPerPlayer - 1; i > 0; i--) {
-			fields.push(
-				inner
-					.duplicate()
-					.add(
-						i * innerToRightTarget.x,
-						i * innerToRightTarget.y
-					)
-			);
+			fields.push(inner.duplicate().add(i * innerToRightTarget.x, i * innerToRightTarget.y));
 		}
-		const outerLeft =
-			i == outerAnchors.length - 1
-				? outerAnchors[0]
-				: outerAnchors[i + 1];
-		const outerLeftTarget = createNeighbor(
-			outerLeft,
-			inner,
-			nrPiecesPerPlayer,
-			-Math.PI / 2
-		);
+		const outerLeft = i == outerAnchors.length - 1 ? outerAnchors[0] : outerAnchors[i + 1];
+		const outerLeftTarget = createNeighbor(outerLeft, inner, nrPiecesPerPlayer, -Math.PI / 2);
 		const innerToLeftTarget = outerLeftTarget
 			.duplicate()
 			.add(-inner.x, -inner.y)
 			.multiply(1.0 / nrPiecesPerPlayer);
 		for (let i = 1; i < nrPiecesPerPlayer; i++) {
-			fields.push(
-				inner
-					.duplicate()
-					.add(
-						i * innerToLeftTarget.x,
-						i * innerToLeftTarget.y
-					)
-			);
+			fields.push(inner.duplicate().add(i * innerToLeftTarget.x, i * innerToLeftTarget.y));
 		}
 		fields.push(outerLeftTarget);
 	}
@@ -287,33 +217,21 @@ function createConnections(
  * @param {number} angle
  * @returns {Vector}
  */
-function createNeighbor(
-	outer,
-	inner,
-	nrPiecesPerPlayer,
-	angle
-) {
+function createNeighbor(outer, inner, nrPiecesPerPlayer, angle) {
 	const innerToOuter = outer
 		.duplicate()
 		.add(-inner.x, -inner.y)
 		.multiply(1.0 / nrPiecesPerPlayer);
-	const helper= outer
-		.duplicate()
-		.rotate(angle)
-		.multiply(innerToOuter.length());
+	const helper = outer.duplicate().rotate(angle).multiply(innerToOuter.length());
 	return outer.duplicate().add(helper.x, helper.y);
 }
 
 function updateSvg(nrPlayers, nrPiecesPerPlayer) {
-	const [fields, houses] = createBoard(
-		nrPlayers,
-		nrPiecesPerPlayer
-	);
+	const [fields, houses] = createBoard(nrPlayers, nrPiecesPerPlayer);
 	const spanElem = document.getElementById('nrPlayersDisplay');
 	spanElem.textContent = nrPlayers;
 	const svgElem = document.getElementById('board');
-	while (svgElem.lastElementChild)
-		svgElem.removeChild(svgElem.lastElementChild);
+	while (svgElem.lastElementChild) svgElem.removeChild(svgElem.lastElementChild);
 	svgElem.appendChild(createPolygonElement(fields));
 	let colorindex = 0;
 	for (let i = 0; i < fields.length; i++) {
@@ -322,20 +240,11 @@ function updateSvg(nrPlayers, nrPiecesPerPlayer) {
 		if (i % (2 * nrPiecesPerPlayer + 2) == 2 * nrPiecesPerPlayer) {
 			circleElem.setAttribute('fill', colors[colorindex]);
 			for (let j = 0; j < nrPiecesPerPlayer; j++) {
-				const houseCircle = createCircleElement(
-					houses.pop(),
-					0.7
-				);
-				houseCircle.setAttribute(
-					'fill',
-					colors[colorindex]
-				);
+				const houseCircle = createCircleElement(houses.pop(), 0.7);
+				houseCircle.setAttribute('fill', colors[colorindex]);
 				svgElem.appendChild(houseCircle);
 			}
-			colorindex =
-				colorindex >= colors.length
-					? 0
-					: colorindex + 1;
+			colorindex = colorindex >= colors.length ? 0 : colorindex + 1;
 		} else {
 			circleElem.setAttribute('fill', 'white');
 		}
@@ -344,14 +253,8 @@ function updateSvg(nrPlayers, nrPiecesPerPlayer) {
 }
 
 function createPolygonElement(fields) {
-	const polygonElem = document.createElementNS(
-		'http://www.w3.org/2000/svg',
-		'polygon'
-	);
-	polygonElem.setAttribute(
-		'points',
-		fields.map((field) => `${field.x}, ${field.y}`).join(' ')
-	);
+	const polygonElem = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+	polygonElem.setAttribute('points', fields.map((field) => `${field.x}, ${field.y}`).join(' '));
 	polygonElem.setAttribute('fill', 'none');
 	polygonElem.setAttribute('stroke', 'black');
 	polygonElem.setAttribute('stroke-width', '0.01');
@@ -359,10 +262,7 @@ function createPolygonElement(fields) {
 }
 
 function createCircleElement(field, scale = 1.0) {
-	const circleElem = document.createElementNS(
-		'http://www.w3.org/2000/svg',
-		'circle'
-	);
+	const circleElem = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 	circleElem.setAttribute('cx', field.x);
 	circleElem.setAttribute('cy', field.y);
 	circleElem.setAttribute('r', 0.075 * scale);
@@ -374,12 +274,6 @@ function createCircleElement(field, scale = 1.0) {
 window.onload = () => {
 	const selectNrPlayersElem = document.getElementById('nrPlayers');
 	selectNrPlayersElem.oninput = () =>
-		updateSvg(
-			selectNrPlayersElem.value,
-			playerToPieces.get(parseInt(selectNrPlayersElem.value))
-		);
-	updateSvg(
-		selectNrPlayersElem.value,
-		playerToPieces.get(parseInt(selectNrPlayersElem.value))
-	);
+		updateSvg(selectNrPlayersElem.value, playerToPieces.get(parseInt(selectNrPlayersElem.value)));
+	updateSvg(selectNrPlayersElem.value, playerToPieces.get(parseInt(selectNrPlayersElem.value)));
 };
