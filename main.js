@@ -268,8 +268,21 @@ function createCircleElement(field, scale = 1.0) {
 }
 
 window.onload = () => {
-	const selectNrPlayersElem = document.getElementById('nrPlayers');
-	selectNrPlayersElem.oninput = () =>
-		updateSvg(selectNrPlayersElem.value, PLAYER_TO_PIECES.get(parseInt(selectNrPlayersElem.value)));
-	updateSvg(selectNrPlayersElem.value, PLAYER_TO_PIECES.get(parseInt(selectNrPlayersElem.value)));
+	const nrPlayersElem = document.getElementById('nrPlayers');
+	const customNrPlayersElem = document.getElementById('customNrPlayers');
+	const customNrPiecesPerPlayerElem = document.getElementById('customNrPiecesPerPlayer');
+	nrPlayersElem.oninput = () => {
+		const nrPiecesPerPlayer = PLAYER_TO_PIECES.get(parseInt(nrPlayersElem.value));
+		customNrPlayersElem.value = nrPlayersElem.value;
+		customNrPiecesPerPlayerElem.value = nrPiecesPerPlayer;
+		updateSvg(nrPlayersElem.value, nrPiecesPerPlayer);
+	};
+	customNrPlayersElem.oninput = () => {
+		nrPlayersElem.value = customNrPlayersElem.value;
+		updateSvg(customNrPlayersElem.value, customNrPiecesPerPlayerElem.value);
+	};
+	customNrPiecesPerPlayerElem.oninput = () => {
+		updateSvg(customNrPlayersElem.value, customNrPiecesPerPlayerElem.value);
+	};
+	updateSvg(nrPlayersElem.value, PLAYER_TO_PIECES.get(parseInt(nrPlayersElem.value)));
 };
