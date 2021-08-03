@@ -93,11 +93,7 @@ class Vector {
  * @returns {Array.<Array.<Vector>>} Tuple of (field, house) positions
  */
 function createBoard(nrPlayers, nrPiecesPerPlayer) {
-	console.assert(
-		nrPlayers >= 2 && nrPlayers <= 10,
-		'Expected: 2 <= nrPlayers <= 10; Is: nrPlayers == %d',
-		nrPlayers
-	);
+	console.assert(nrPlayers >= 2 && nrPlayers <= 10, 'Expected: 2 <= nrPlayers <= 10; Is: nrPlayers == %d', nrPlayers);
 	console.assert(
 		nrPiecesPerPlayer >= 1 && nrPiecesPerPlayer <= 6,
 		'Expected: 1 <= nrPiecesPerPlayer <= 6, Is: nrPlayers == %d',
@@ -107,7 +103,7 @@ function createBoard(nrPlayers, nrPiecesPerPlayer) {
 	const firstInnerAnchor = firstOuterAnchor
 		.duplicate()
 		.rotate(Math.PI / nrPlayers)
-		.multiply((Math.sqrt(2.0) * 0.8) / nrPiecesPerPlayer);
+		.multiply(Math.sqrt(2.0) / (nrPiecesPerPlayer + 1));
 	const outerAnchors = createAnchors(nrPlayers, firstOuterAnchor);
 	const innerAnchors = createAnchors(nrPlayers, firstInnerAnchor);
 	console.assert(outerAnchors.length == innerAnchors.length);
