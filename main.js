@@ -27,7 +27,7 @@
 
 'use strict';
 
-const playerToPieces = new Map([
+const PLAYER_TO_PIECES = new Map([
 	[2, 6],
 	[3, 5],
 	[4, 4],
@@ -39,7 +39,7 @@ const playerToPieces = new Map([
 	[10, 1],
 ]);
 
-const colors = [
+const COLORS = [
 	'#1f77b4',
 	'#ff7f0e',
 	'#2ca02c',
@@ -238,13 +238,13 @@ function updateSvg(nrPlayers, nrPiecesPerPlayer) {
 		const field = fields[i];
 		const circleElem = createCircleElement(field);
 		if (i % (2 * nrPiecesPerPlayer + 2) == 2 * nrPiecesPerPlayer) {
-			circleElem.setAttribute('fill', colors[colorindex]);
+			circleElem.setAttribute('fill', COLORS[colorindex]);
 			for (let j = 0; j < nrPiecesPerPlayer; j++) {
 				const houseCircle = createCircleElement(houses.pop(), 0.7);
-				houseCircle.setAttribute('fill', colors[colorindex]);
+				houseCircle.setAttribute('fill', COLORS[colorindex]);
 				svgElem.appendChild(houseCircle);
 			}
-			colorindex = colorindex >= colors.length ? 0 : colorindex + 1;
+			colorindex = colorindex >= COLORS.length ? 0 : colorindex + 1;
 		} else {
 			circleElem.setAttribute('fill', 'white');
 		}
@@ -274,6 +274,6 @@ function createCircleElement(field, scale = 1.0) {
 window.onload = () => {
 	const selectNrPlayersElem = document.getElementById('nrPlayers');
 	selectNrPlayersElem.oninput = () =>
-		updateSvg(selectNrPlayersElem.value, playerToPieces.get(parseInt(selectNrPlayersElem.value)));
-	updateSvg(selectNrPlayersElem.value, playerToPieces.get(parseInt(selectNrPlayersElem.value)));
+		updateSvg(selectNrPlayersElem.value, PLAYER_TO_PIECES.get(parseInt(selectNrPlayersElem.value)));
+	updateSvg(selectNrPlayersElem.value, PLAYER_TO_PIECES.get(parseInt(selectNrPlayersElem.value)));
 };
