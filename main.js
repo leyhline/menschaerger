@@ -223,12 +223,16 @@ function createNeighborField(outerField, innerField, nrPiecesPerPlayer, angle) {
 
 window.onload = () => {
     const selectNrPlayersElem = document.getElementById("nrPlayers");
-    selectNrPlayersElem.onchange = (() => updateSvg(selectNrPlayersElem.value, playerToPieces.get(parseInt(selectNrPlayersElem.value))));
+    selectNrPlayersElem.oninput = (() =>
+        updateSvg(selectNrPlayersElem.value,
+                  playerToPieces.get(parseInt(selectNrPlayersElem.value))));
     updateSvg(selectNrPlayersElem.value, playerToPieces.get(parseInt(selectNrPlayersElem.value)));
 }
 
 function updateSvg(nrPlayers, nrPiecesPerPlayer) {
     const [fields, houseFields] = createBoard(nrPlayers, nrPiecesPerPlayer);
+    const spanElem = document.getElementById("nrPlayersDisplay");
+    spanElem.textContent = nrPlayers;
     const svgElem = document.getElementById("board");
     while (svgElem.lastElementChild) svgElem.removeChild(svgElem.lastElementChild);
     svgElem.appendChild(createPolygonElement(fields));

@@ -11,18 +11,9 @@
 <body>
   <h1>Mensch ärgere dich nicht</h1>
   <p>
-    <label for="nrPlayers">Wie viele Spieler?</label>
-    <select id="nrPlayers">
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4" selected>4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10</option>
-    </select>
+    <input type="range" min="2" max="10" value="4" class="slider" id="nrPlayers">
+    <span id="nrPlayersDisplay">n</span>
+    Players
   </p>
   <svg id="board" width="800" height="800" viewBox="-1.5 -1.5 3 3" xmlns="http://www.w3.org/2000/svg"></svg>
 </body>
