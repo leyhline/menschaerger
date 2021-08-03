@@ -1,21 +1,35 @@
 <!DOCTYPE html>
 <html lang="de">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Mensch ärgere dich nicht</title>
+		<meta
+			name="viewport"
+			content="width=device-width,initial-scale=1"
+		/>
+		<script src="main.js"></script>
+	</head>
 
-<head>
-  <meta charset="UTF-8">
-  <title>Mensch ärgere dich nicht</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <script src="main.js"></script>
-</head>
-
-<body>
-  <h1>Mensch ärgere dich nicht</h1>
-  <p>
-    <input type="range" min="2" max="10" value="4" class="slider" id="nrPlayers">
-    <span id="nrPlayersDisplay">n</span>
-    Players
-  </p>
-  <svg id="board" width="800" height="800" viewBox="-1.5 -1.5 3 3" xmlns="http://www.w3.org/2000/svg"></svg>
-</body>
-
+	<body>
+		<h1>Mensch ärgere dich nicht</h1>
+		<p>
+			<input
+				type="range"
+				min="2"
+				max="10"
+				value="4"
+				class="slider"
+				id="nrPlayers"
+			/>
+			<span id="nrPlayersDisplay">n</span>
+			Players
+		</p>
+		<svg
+			id="board"
+			width="800"
+			height="800"
+			viewBox="-1.5 -1.5 3 3"
+			xmlns="http://www.w3.org/2000/svg"
+		></svg>
+	</body>
 </html>
