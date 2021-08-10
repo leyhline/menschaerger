@@ -67,32 +67,20 @@ class Vector {
 	}
 
 	multiply(factor) {
-		return new Vector(
-			this.x * factor,
-			this.y * factor
-		);
+		return new Vector(this.x * factor, this.y * factor);
 	}
 
 	divide(divisor) {
-		return new Vector(
-			this.x / divisor,
-			this.y / divisor
-		);
-	};
+		return new Vector(this.x / divisor, this.y / divisor);
+	}
 
 	add(vector) {
-		return new Vector(
-			this.x + vector.x,
-			this.y + vector.y
-		);
+		return new Vector(this.x + vector.x, this.y + vector.y);
 	}
 
 	subtract(vector) {
-		return new Vector(
-			this.x - vector.x,
-			this.y - vector.y
-		);
-	};
+		return new Vector(this.x - vector.x, this.y - vector.y);
+	}
 
 	length() {
 		return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
@@ -169,9 +157,7 @@ function createHouses(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
 		const innerRight = i == 0 ? innerAnchors[innerAnchors.length - 1] : innerAnchors[i - 1];
 		const leftToRight = innerRight.subtract(innerLeft).divide(2.0);
 		const innerOuterParallel = innerLeft.add(leftToRight);
-		const helper = outer
-			.subtract(innerOuterParallel)
-			.multiply((1.0 / nrPiecesPerPlayer) * 0.9);
+		const helper = outer.subtract(innerOuterParallel).multiply(0.9 / nrPiecesPerPlayer);
 		for (let j = 1; j <= nrPiecesPerPlayer; j++) {
 			houses[i * nrPiecesPerPlayer + j - 1] = outer.subtract(helper.multiply(j));
 		}
@@ -195,18 +181,14 @@ function createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
 		const inner = innerAnchors[i];
 		const outerRight = outerAnchors[i];
 		const outerRightTarget = createNeighbor(outerRight, inner, nrPiecesPerPlayer, Math.PI / 2.0);
-		const innerToRightTarget = outerRightTarget
-			.subtract(inner)
-			.divide(nrPiecesPerPlayer);
+		const innerToRightTarget = outerRightTarget.subtract(inner).divide(nrPiecesPerPlayer);
 		fields.push(outerRightTarget);
 		for (let i = nrPiecesPerPlayer - 1; i > 0; i--) {
 			fields.push(inner.add(innerToRightTarget.multiply(i)));
 		}
 		const outerLeft = i == outerAnchors.length - 1 ? outerAnchors[0] : outerAnchors[i + 1];
 		const outerLeftTarget = createNeighbor(outerLeft, inner, nrPiecesPerPlayer, -Math.PI / 2);
-		const innerToLeftTarget = outerLeftTarget
-			.subtract(inner)
-			.divide(nrPiecesPerPlayer);
+		const innerToLeftTarget = outerLeftTarget.subtract(inner).divide(nrPiecesPerPlayer);
 		for (let i = 1; i < nrPiecesPerPlayer; i++) {
 			fields.push(inner.add(innerToLeftTarget.multiply(i)));
 		}
@@ -222,9 +204,7 @@ function createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
  * @returns {Vector}
  */
 function createNeighbor(outer, inner, nrPiecesPerPlayer, angle) {
-	const innerToOuter = outer
-		.subtract(inner)
-		.divide(nrPiecesPerPlayer);
+	const innerToOuter = outer.subtract(inner).divide(nrPiecesPerPlayer);
 	const helper = outer.rotate(angle).multiply(innerToOuter.length());
 	return outer.add(helper);
 }
