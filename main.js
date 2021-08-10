@@ -27,207 +27,42 @@
 
 'use strict';
 
-const PLAYER_TO_PIECES = new Map([
-	[2, 6],
-	[3, 5],
-	[4, 4],
-	[5, 3],
-	[6, 3],
-	[7, 2],
-	[8, 2],
-	[9, 1],
-	[10, 1],
-]);
+window.onload = main;
 
-const COLORS = [
-	'#1f77b4',
-	'#ff7f0e',
-	'#2ca02c',
-	'#d62728',
-	'#9467bd',
-	'#8c564b',
-	'#e377c2',
-	'#747474',
-	'#bcbd22',
-	'#17becf',
-];
-
-class Vector {
-	constructor(x, y) {
-		this.x = x;
-		this.y = y;
-	}
-
-	rotate(angle) {
-		const xNew = this.x * Math.cos(angle) - this.y * Math.sin(angle);
-		this.y = this.x * Math.sin(angle) + this.y * Math.cos(angle);
-		this.x = xNew;
-		return this;
-	}
-
-	multiply(factor) {
-		this.x *= factor;
-		this.y *= factor;
-		return this;
-	}
-
-	add(x, y) {
-		this.x += x;
-		this.y += y;
-		return this;
-	}
-
-	duplicate() {
-		return new Vector(this.x, this.y);
-	}
-
-	length() {
-		return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
-	}
-}
-
-/**
- * Creates a board representation with coordinates of fiels
- * @param {number} nrPlayers
- * @param {number} nrPiecesPerPlayer
- * @returns {Array.<Array.<Vector>>} Tuple of (field, house) positions
- */
-function createBoard(nrPlayers, nrPiecesPerPlayer) {
-	console.assert(nrPlayers >= 2 && nrPlayers <= 10, 'Expected: 2 <= nrPlayers <= 10; Is: nrPlayers == %d', nrPlayers);
-	console.assert(
-		nrPiecesPerPlayer >= 1 && nrPiecesPerPlayer <= 6,
-		'Expected: 1 <= nrPiecesPerPlayer <= 6, Is: nrPlayers == %d',
-		nrPiecesPerPlayer
-	);
-	const firstOuterAnchor = new Vector(0.0, 1.0);
-	const firstInnerAnchor = firstOuterAnchor
-		.duplicate()
-		.rotate(Math.PI / nrPlayers)
-		.multiply(Math.sqrt(2.0) / (nrPiecesPerPlayer + 1));
-	const outerAnchors = createAnchors(nrPlayers, firstOuterAnchor);
-	const innerAnchors = createAnchors(nrPlayers, firstInnerAnchor);
-	console.assert(outerAnchors.length == innerAnchors.length);
-	const houses = createHouses(outerAnchors, innerAnchors, nrPiecesPerPlayer);
-	const connections = createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer);
-	const board = mergeToSortedBoard(outerAnchors, innerAnchors, connections, nrPlayers, nrPiecesPerPlayer);
-	console.assert(board.length == (2 * nrPiecesPerPlayer + 2) * nrPlayers);
-	return [board, houses];
-}
-
-function mergeToSortedBoard(outerAnchors, innerAnchors, connections, nrPlayers, nrPiecesPerPlayer) {
-	const sortedVectors = [];
-	for (let i = 0; i < nrPlayers; i++) {
-		for (let j = 0; j < nrPiecesPerPlayer; j++) {
-			sortedVectors.push(connections.pop());
-		}
-		sortedVectors.push(innerAnchors.pop());
-		for (let j = 0; j < nrPiecesPerPlayer; j++) {
-			sortedVectors.push(connections.pop());
-		}
-		sortedVectors.push(outerAnchors.pop());
-	}
-	return sortedVectors;
-}
-
-/**
- * @param {number} nrPlayers
- * @param {Vector} firstAnchor
- * @returns {Array.<Vector>}
- */
-function createAnchors(nrPlayers, firstAnchor) {
-	const anchors = Array(nrPlayers);
-	anchors[0] = firstAnchor;
-	const angle = (2 * Math.PI) / nrPlayers;
-	for (let i = 1; i < nrPlayers; i++) {
-		anchors[i] = firstAnchor.duplicate().rotate(i * angle);
-	}
-	return anchors;
-}
-
-/**
- * @param {Array.<Vector>} outerAnchors
- * @param {Array.<Vector>} innerAnchors
- * @param {number} nrPiecesPerPlayer
- * @returns {Array.<Vector>}
- */
-function createHouses(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
-	const houses = Array(outerAnchors.length * nrPiecesPerPlayer);
-	for (let i = 0; i < outerAnchors.length; i++) {
-		const outer = outerAnchors[i];
-		const innerLeft = innerAnchors[i];
-		const innerRight = i == 0 ? innerAnchors[innerAnchors.length - 1] : innerAnchors[i - 1];
-		const leftToRight = innerRight.duplicate().add(-innerLeft.x, -innerLeft.y).multiply(0.5);
-		const innerOuterParallel = innerLeft.duplicate().add(leftToRight.x, leftToRight.y);
-		const helper = outer
-			.duplicate()
-			.add(-innerOuterParallel.x, -innerOuterParallel.y)
-			.multiply((1.0 / nrPiecesPerPlayer) * 0.9);
-		for (let j = 1; j <= nrPiecesPerPlayer; j++) {
-			houses[i * nrPiecesPerPlayer + j - 1] = outer.duplicate().add(-helper.x * j, -helper.y * j);
-		}
-	}
-	return houses;
-}
-
-/**
- * @param {Array.<Vector>} outerAnchors
- * @param {Array.<Vector>} innerAnchors
- * @param {number} nrPiecesPerPlayer
- * @returns {Array.<Vector>}
- */
-function createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
-	console.assert(
-		outerAnchors.length === innerAnchors.length,
-		'Expected: same number of outerAnchors and innerAnchors'
-	);
-	const fields = [];
-	for (let i = 0; i < innerAnchors.length; i++) {
-		const inner = innerAnchors[i];
-		const outerRight = outerAnchors[i];
-		const outerRightTarget = createNeighbor(outerRight, inner, nrPiecesPerPlayer, Math.PI / 2.0);
-		const innerToRightTarget = outerRightTarget
-			.duplicate()
-			.add(-inner.x, -inner.y)
-			.multiply(1.0 / nrPiecesPerPlayer);
-		fields.push(outerRightTarget);
-		for (let i = nrPiecesPerPlayer - 1; i > 0; i--) {
-			fields.push(inner.duplicate().add(i * innerToRightTarget.x, i * innerToRightTarget.y));
-		}
-		const outerLeft = i == outerAnchors.length - 1 ? outerAnchors[0] : outerAnchors[i + 1];
-		const outerLeftTarget = createNeighbor(outerLeft, inner, nrPiecesPerPlayer, -Math.PI / 2);
-		const innerToLeftTarget = outerLeftTarget
-			.duplicate()
-			.add(-inner.x, -inner.y)
-			.multiply(1.0 / nrPiecesPerPlayer);
-		for (let i = 1; i < nrPiecesPerPlayer; i++) {
-			fields.push(inner.duplicate().add(i * innerToLeftTarget.x, i * innerToLeftTarget.y));
-		}
-		fields.push(outerLeftTarget);
-	}
-	return fields;
-}
-
-/**
- * @param {Vector} outer
- * @param {Vector} inner
- * @param {number} angle
- * @returns {Vector}
- */
-function createNeighbor(outer, inner, nrPiecesPerPlayer, angle) {
-	const innerToOuter = outer
-		.duplicate()
-		.add(-inner.x, -inner.y)
-		.multiply(1.0 / nrPiecesPerPlayer);
-	const helper = outer.duplicate().rotate(angle).multiply(innerToOuter.length());
-	return outer.duplicate().add(helper.x, helper.y);
+function main() {
+	const nrPlayersElem = document.getElementById('nrPlayers');
+	const customNrPlayersElem = document.getElementById('customNrPlayers');
+	const customNrPiecesPerPlayerElem = document.getElementById('customNrPiecesPerPlayer');
+	nrPlayersElem.oninput = () => {
+		const nrPlayers = parseInt(nrPlayersElem.value);
+		const nrPiecesPerPlayer = PLAYER_TO_PIECES.get(nrPlayers);
+		customNrPlayersElem.value = nrPlayers;
+		customNrPiecesPerPlayerElem.value = nrPiecesPerPlayer;
+		updateSvg(nrPlayers, nrPiecesPerPlayer);
+	};
+	customNrPlayersElem.oninput = () => {
+		const nrPlayers = parseInt(customNrPlayersElem.value);
+		const nrPiecesPerPlayer = parseInt(customNrPiecesPerPlayerElem.value);
+		nrPlayersElem.value = nrPlayers;
+		updateSvg(nrPlayers, nrPiecesPerPlayer);
+	};
+	customNrPiecesPerPlayerElem.oninput = () => {
+		const nrPlayers = parseInt(customNrPlayersElem.value);
+		const nrPiecesPerPlayer = parseInt(customNrPiecesPerPlayerElem.value);
+		updateSvg(nrPlayers, nrPiecesPerPlayer);
+	};
+	updateSvg(nrPlayersElem.value, PLAYER_TO_PIECES.get(parseInt(nrPlayersElem.value)));
 }
 
 function updateSvg(nrPlayers, nrPiecesPerPlayer) {
 	const [fields, houses] = createBoard(nrPlayers, nrPiecesPerPlayer);
 	const spanElem = document.getElementById('nrPlayersDisplay');
 	spanElem.textContent = nrPlayers;
-	const svgElem = document.getElementById('board');
-	while (svgElem.lastElementChild) svgElem.removeChild(svgElem.lastElementChild);
+	const divElem = document.getElementById('board');
+	const svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+	svgElem.setAttribute('width', 800);
+	svgElem.setAttribute('height', 800);
+	svgElem.setAttribute('viewBox', '-1.5 -1.5 3 3');
 	svgElem.appendChild(createPolygonElement(fields));
 	let colorindex = 0;
 	for (let i = 0; i < fields.length; i++) {
@@ -246,6 +81,7 @@ function updateSvg(nrPlayers, nrPiecesPerPlayer) {
 		}
 		svgElem.appendChild(circleElem);
 	}
+	divElem.replaceChildren(svgElem);
 }
 
 function createPolygonElement(fields) {
@@ -266,23 +102,3 @@ function createCircleElement(field, scale = 1.0) {
 	circleElem.setAttribute('stroke-width', 0.01);
 	return circleElem;
 }
-
-window.onload = () => {
-	const nrPlayersElem = document.getElementById('nrPlayers');
-	const customNrPlayersElem = document.getElementById('customNrPlayers');
-	const customNrPiecesPerPlayerElem = document.getElementById('customNrPiecesPerPlayer');
-	nrPlayersElem.oninput = () => {
-		const nrPiecesPerPlayer = PLAYER_TO_PIECES.get(parseInt(nrPlayersElem.value));
-		customNrPlayersElem.value = nrPlayersElem.value;
-		customNrPiecesPerPlayerElem.value = nrPiecesPerPlayer;
-		updateSvg(nrPlayersElem.value, nrPiecesPerPlayer);
-	};
-	customNrPlayersElem.oninput = () => {
-		nrPlayersElem.value = customNrPlayersElem.value;
-		updateSvg(customNrPlayersElem.value, customNrPiecesPerPlayerElem.value);
-	};
-	customNrPiecesPerPlayerElem.oninput = () => {
-		updateSvg(customNrPlayersElem.value, customNrPiecesPerPlayerElem.value);
-	};
-	updateSvg(nrPlayersElem.value, PLAYER_TO_PIECES.get(parseInt(nrPlayersElem.value)));
-};
