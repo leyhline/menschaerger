@@ -9,19 +9,31 @@
 	</head>
 
 	<body>
-		<h1>Mensch ärgere dich nicht</h1>
-		<p>
-			<input type="range" min="2" max="10" value="4" class="slider" id="nrPlayers" />
-			<span id="nrPlayersDisplay">n</span>
-			Players
-		</p>
-		<p>
-			<input id="customNrPlayers" type="number" value="4" />
-			Players
-			<br />
-			<input id="customNrPiecesPerPlayer" type="number" value="4" />
-			Pieces per player
-		</p>
-		<div id="board"></div>
+		<header>
+			<h1>Mensch ärgere dich nicht</h1>
+		</header>
+		<main>
+			<p>
+				<input type="range" min="2" max="10" value="4" class="slider" id="nrPlayers" />
+				<span id="nrPlayersDisplay">n</span>
+				Spieler
+			</p>
+			<p>
+				<input id="customNrPlayers" type="number" value="4" />
+				Spieler
+				<br />
+				<input id="customNrPiecesPerPlayer" type="number" value="4" />
+				Figuren je Spieler
+			</p>
+			<div id="board"></div>
+		</main>
+		<footer>
+			<p>
+				Copyright (C) 2021 Thomas Leyh <a href="mailto:thomas.leyh@mailbox.org">thomas.leyh@mailbox.org</a
+				><br />
+				The <a href="https://github.com/leyhline/menschaerger/">source code</a> is licensed under the
+				<a href="LICENSE.txt">GPLv3</a>.
+			</p>
+		</footer>
 	</body>
 </html>
