@@ -55,21 +55,21 @@ function main() {
 }
 
 function updateSvg(nrPlayers, nrPiecesPerPlayer) {
-	const [fields, houses] = createBoard(nrPlayers, nrPiecesPerPlayer);
+	const [path, houses] = createBoard(nrPlayers, nrPiecesPerPlayer);
 	const spanElem = document.getElementById('nrPlayersDisplay');
 	spanElem.textContent = nrPlayers;
 	const divElem = document.getElementById('board');
 	const svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 	svgElem.setAttribute('width', 800);
 	svgElem.setAttribute('height', 800);
-	const maxLen = 1.5 * Math.max(...fields.map(v => v.length()));
+	const maxLen = 1.5 * Math.max(...path.map(v => v.length()));
 	svgElem.setAttribute('viewBox', `${-maxLen} ${-maxLen} ${2*maxLen} ${2*maxLen}`);
-	svgElem.appendChild(createPolygonElement(fields));
+	svgElem.appendChild(createPolygonElement(path));
 	let colorindex = 0;
-	for (let i = 0; i < fields.length; i++) {
-		const field = fields[i];
+	for (let i = 0; i < path.length; i++) {
+		const field = path[i];
 		const circleElem = createCircleElement(field);
-		if (i % (2 * nrPiecesPerPlayer + 2) == 2 * nrPiecesPerPlayer) {
+		if (i % (2 * nrPiecesPerPlayer + 2) == 1 * nrPiecesPerPlayer) {
 			circleElem.setAttribute('fill', COLORS[colorindex]);
 			for (let j = 0; j < nrPiecesPerPlayer; j++) {
 				const houseCircle = createCircleElement(houses.pop(), 0.7);
@@ -85,9 +85,9 @@ function updateSvg(nrPlayers, nrPiecesPerPlayer) {
 	divElem.replaceChildren(svgElem);
 }
 
-function createPolygonElement(fields) {
+function createPolygonElement(path) {
 	const polygonElem = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-	polygonElem.setAttribute('points', fields.map((field) => `${field.x}, ${field.y}`).join(' '));
+	polygonElem.setAttribute('points', path.map((field) => `${field.x}, ${field.y}`).join(' '));
 	polygonElem.setAttribute('fill', 'none');
 	polygonElem.setAttribute('stroke', 'black');
 	polygonElem.setAttribute('stroke-width', '0.01');

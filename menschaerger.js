@@ -109,25 +109,9 @@ function createBoard(nrPlayers, nrPiecesPerPlayer) {
 	const innerAnchors = createAnchors(nrPlayers, firstInnerAnchor);
 	console.assert(outerAnchors.length == innerAnchors.length);
 	const houses = createHouses(outerAnchors, innerAnchors, nrPiecesPerPlayer);
-	const connections = createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer);
-	const board = mergeToSortedBoard(outerAnchors, innerAnchors, connections, nrPlayers, nrPiecesPerPlayer);
-	console.assert(board.length == (2 * nrPiecesPerPlayer + 2) * nrPlayers);
-	return [board, houses];
-}
-
-function mergeToSortedBoard(outerAnchors, innerAnchors, connections, nrPlayers, nrPiecesPerPlayer) {
-	const sortedVectors = [];
-	for (let i = 0; i < nrPlayers; i++) {
-		for (let j = 0; j < nrPiecesPerPlayer; j++) {
-			sortedVectors.push(connections.pop());
-		}
-		sortedVectors.push(innerAnchors.pop());
-		for (let j = 0; j < nrPiecesPerPlayer; j++) {
-			sortedVectors.push(connections.pop());
-		}
-		sortedVectors.push(outerAnchors.pop());
-	}
-	return sortedVectors;
+	const path = createPath(outerAnchors, innerAnchors, nrPiecesPerPlayer);
+	console.assert(path.length == (2 * nrPiecesPerPlayer + 2) * nrPlayers);
+	return [path, houses];
 }
 
 /**
@@ -173,40 +157,25 @@ function createHouses(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
  * @param {number} nrPiecesPerPlayer
  * @returns {Array.<Vector>}
  */
-function createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
+function createPath(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
 	console.assert(
 		outerAnchors.length === innerAnchors.length,
 		'Expected: same number of outerAnchors and innerAnchors'
 	);
 	const fields = [];
-	for (let i = 0; i < innerAnchors.length; i++) {
-		const inner = innerAnchors[i];
-		const outerRight = outerAnchors[i];
-		const outerRightTarget = createNeighbor(outerRight, inner, nrPiecesPerPlayer, Math.PI / 2.0);
-		const innerToRightTarget = outerRightTarget.subtract(inner).divide(nrPiecesPerPlayer);
-		fields.push(outerRightTarget);
-		for (let i = nrPiecesPerPlayer - 1; i > 0; i--) {
-			fields.push(inner.add(innerToRightTarget.multiply(i)));
+	for (let i = innerAnchors.length - 1; i >= 0; i--) {
+		const innerLeft = innerAnchors[i];
+		const innerRight = i > 0 ? innerAnchors[i - 1] : innerAnchors[innerAnchors.length - 1];
+		const innerMiddle = innerLeft.add(innerRight.subtract(innerLeft).divide(2.0));
+		const outer = outerAnchors[i];
+		const distance = outer.subtract(innerMiddle).divide(nrPiecesPerPlayer);
+		for (let i = 0; i <= nrPiecesPerPlayer; i++) {
+			fields.push(innerLeft.add(distance.multiply(i)));
 		}
-		const outerLeft = i == outerAnchors.length - 1 ? outerAnchors[0] : outerAnchors[i + 1];
-		const outerLeftTarget = createNeighbor(outerLeft, inner, nrPiecesPerPlayer, -Math.PI / 2);
-		const innerToLeftTarget = outerLeftTarget.subtract(inner).divide(nrPiecesPerPlayer);
-		for (let i = 1; i < nrPiecesPerPlayer; i++) {
-			fields.push(inner.add(innerToLeftTarget.multiply(i)));
+		fields.push(outer);
+		for (let i = nrPiecesPerPlayer; i > 0; i--) {
+			fields.push(innerRight.add(distance.multiply(i)));
 		}
-		fields.push(outerLeftTarget);
 	}
 	return fields;
-}
-
-/**
- * @param {Vector} outer
- * @param {Vector} inner
- * @param {number} angle
- * @returns {Vector}
- */
-function createNeighbor(outer, inner, nrPiecesPerPlayer, angle) {
-	console.log(outer, inner);
-	const helper = outer.subtract(inner).divide(nrPiecesPerPlayer).rotate(angle);
-	return outer.add(helper);
 }
