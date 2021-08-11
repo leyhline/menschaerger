@@ -62,7 +62,8 @@ function updateSvg(nrPlayers, nrPiecesPerPlayer) {
 	const svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 	svgElem.setAttribute('width', 800);
 	svgElem.setAttribute('height', 800);
-	svgElem.setAttribute('viewBox', '-1.5 -1.5 3 3');
+	const maxLen = 1.5 * Math.max(...fields.map(v => v.length()));
+	svgElem.setAttribute('viewBox', `${-maxLen} ${-maxLen} ${2*maxLen} ${2*maxLen}`);
 	svgElem.appendChild(createPolygonElement(fields));
 	let colorindex = 0;
 	for (let i = 0; i < fields.length; i++) {

@@ -27,6 +27,9 @@
 
 'use strict';
 
+const ORIGIN_X = 0.0;
+const ORIGIN_Y = 1.0;
+
 const PLAYER_TO_PIECES = new Map([
 	[2, 6],
 	[3, 5],
@@ -99,10 +102,9 @@ function createBoard(nrPlayers, nrPiecesPerPlayer) {
 		'Expected: 1 <= nrPiecesPerPlayer <= 6, Is: nrPlayers == %d',
 		nrPiecesPerPlayer
 	);
-	const firstOuterAnchor = new Vector(0.0, 1.0);
-	const firstInnerAnchor = firstOuterAnchor
-		.rotate(Math.PI / nrPlayers)
-		.multiply(Math.sqrt(2.0) / (nrPiecesPerPlayer + 1));
+	const firstOuterAnchor = new Vector(ORIGIN_X, ORIGIN_Y);
+	const alpha = 2 * Math.PI / nrPlayers;
+	const firstInnerAnchor = new Vector(-1.0, Math.sin(alpha) / (1 - Math.cos(alpha))).divide(nrPiecesPerPlayer + 1);
 	const outerAnchors = createAnchors(nrPlayers, firstOuterAnchor);
 	const innerAnchors = createAnchors(nrPlayers, firstInnerAnchor);
 	console.assert(outerAnchors.length == innerAnchors.length);
@@ -157,7 +159,7 @@ function createHouses(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
 		const innerRight = i == 0 ? innerAnchors[innerAnchors.length - 1] : innerAnchors[i - 1];
 		const leftToRight = innerRight.subtract(innerLeft).divide(2.0);
 		const innerOuterParallel = innerLeft.add(leftToRight);
-		const helper = outer.subtract(innerOuterParallel).multiply(0.9 / nrPiecesPerPlayer);
+		const helper = outer.subtract(innerOuterParallel).divide(nrPiecesPerPlayer);
 		for (let j = 1; j <= nrPiecesPerPlayer; j++) {
 			houses[i * nrPiecesPerPlayer + j - 1] = outer.subtract(helper.multiply(j));
 		}
@@ -204,7 +206,7 @@ function createConnections(outerAnchors, innerAnchors, nrPiecesPerPlayer) {
  * @returns {Vector}
  */
 function createNeighbor(outer, inner, nrPiecesPerPlayer, angle) {
-	const innerToOuter = outer.subtract(inner).divide(nrPiecesPerPlayer);
-	const helper = outer.rotate(angle).multiply(innerToOuter.length());
+	console.log(outer, inner);
+	const helper = outer.subtract(inner).divide(nrPiecesPerPlayer).rotate(angle);
 	return outer.add(helper);
 }
