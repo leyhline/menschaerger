@@ -104,7 +104,7 @@ function createBoard(nrPlayers, nrPiecesPerPlayer) {
 	);
 	const firstOuterAnchor = new Vector(ORIGIN_X, ORIGIN_Y);
 	const alpha = 2 * Math.PI / nrPlayers;
-	const firstInnerAnchor = new Vector(-1.0, Math.sin(alpha) / (1 - Math.cos(alpha))).divide(nrPiecesPerPlayer + 1);
+	const firstInnerAnchor = createFirstInnerAnchor(alpha, nrPiecesPerPlayer);
 	const outerAnchors = createAnchors(nrPlayers, firstOuterAnchor);
 	const innerAnchors = createAnchors(nrPlayers, firstInnerAnchor);
 	console.assert(outerAnchors.length == innerAnchors.length);
@@ -112,6 +112,15 @@ function createBoard(nrPlayers, nrPiecesPerPlayer) {
 	const path = createPath(outerAnchors, innerAnchors, nrPiecesPerPlayer);
 	console.assert(path.length == (2 * nrPiecesPerPlayer + 2) * nrPlayers);
 	return [path, houses];
+}
+
+function createFirstInnerAnchor(a, m) {
+	const sin = Math.sin;
+	const cos = Math.cos;
+	return new Vector(
+		-sin(a) * (1 + sin(a)/(1 + cos(a))) * (1 + m * sin(a) + cos(a)),
+		sin(a) * (m - m*cos(a) + sin(a) - (sin(a)/(1+cos(a)))*(1 + m*sin(a) + cos(a))) + 2*(1 + cos(a) + m*sin(a))
+	).divide(2 * (1 + m*m + 2*m*sin(a) + cos(a) - m*m*cos(a)));
 }
 
 /**
