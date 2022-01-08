@@ -114,6 +114,20 @@ function createBoard(nrPlayers, nrPiecesPerPlayer) {
 	return [path, houses];
 }
 
+/**
+ * This is the most important function since the position of the first anchor
+ * point (TODO: anchor point?) defines the layout of the whole board. The
+ * remaining code is comparatively straightforward, only using a few rotations
+ * and translations.
+ *
+ * The formula of the anchor point stems from solving a system of equations.
+ * I did this on paper, hence only the solution without any derivation is given
+ * in code. (TODO: there is still some sign error left for a perfect board)
+ *
+ * @param {number} a the angle you get by dividing a full circle (2*pi) by the number of players (nrPlayers)
+ * @param {number} m the number of playing pieces per player (nrPiecesPerPlayer)
+ * @returns {Vector} for sane boards this is one of the fields closest to the center of the board
+ */
 function createFirstInnerAnchor(a, m) {
 	const sin = Math.sin;
 	const cos = Math.cos;
